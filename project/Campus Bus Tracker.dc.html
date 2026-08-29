@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F2F2F7; --bg-el:#FFFFFF; --bg-group:#F2F2F7;
+  --glass:rgba(250,250,252,.72); --glass-thin:rgba(255,255,255,.55);
+  --label:#000; --lab2:rgba(60,60,67,.62); --lab3:rgba(60,60,67,.32);
+  --sep:rgba(60,60,67,.16); --fill:rgba(118,118,128,.12);
+  --acc:#007AFF; --acc-soft:rgba(0,122,255,.12);
+  --green:#1E7B34; --green-bg:rgba(52,199,89,.16);
+  --orange:#9A4E00; --orange-bg:rgba(255,149,0,.18);
+  --gray:#5F5F63; --gray-bg:rgba(142,142,147,.16);
+  --red:#D70015;
+  --shadow:0 10px 34px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.05);
+  --sheet-shadow:0 -1px 0 rgba(255,255,255,.5), 0 -14px 40px rgba(0,0,0,.14);
+  --stage:#e9e7e2; --stage-ink:rgba(0,0,0,.5);
+  --thumb:rgba(255,255,255,.96); --thumb-sh:inset 0 0 0 1px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.18), 0 4px 10px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#000000; --bg-el:#1C1C1E; --bg-group:#000000;
+  --glass:rgba(28,28,30,.7); --glass-thin:rgba(58,58,60,.5);
+  --label:#FFFFFF; --lab2:rgba(235,235,245,.62); --lab3:rgba(235,235,245,.32);
+  --sep:rgba(84,84,88,.6); --fill:rgba(118,118,128,.26);
+  --acc:#0A84FF; --acc-soft:rgba(10,132,255,.2);
+  --green:#30D158; --green-bg:rgba(48,209,88,.18);
+  --orange:#FF9F0A; --orange-bg:rgba(255,159,10,.18);
+  --gray:#98989D; --gray-bg:rgba(142,142,147,.24);
+  --red:#FF453A;
+  --shadow:0 12px 38px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4);
+  --sheet-shadow:0 -1px 0 rgba(255,255,255,.09), 0 -14px 40px rgba(0,0,0,.5);
+  --stage:#131315; --stage-ink:rgba(255,255,255,.45);
+  --thumb:rgba(255,255,255,.14); --thumb-sh:inset 0 0 0 1px rgba(255,255,255,.26), 0 2px 10px rgba(0,0,0,.45);
+}
+html,body{margin:0;padding:0}
+body{background:var(--stage);-webkit-font-smoothing:antialiased;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Inter Tight',system-ui,sans-serif}
+a{color:var(--acc);text-decoration:none}
+a:hover{opacity:.72}
+*{box-sizing:border-box}
+@keyframes scr-in{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes live{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}}
+@media (prefers-reduced-transparency:reduce){
+  :root{--glass:#FAFAFC;--glass-thin:#FFFFFF}
+  [data-theme="dark"]{--glass:#1C1C1E;--glass-thin:#2C2C2E}
+}
+</style>
+</helmet>
+
+<div data-theme="{{ themeAttr }}" style="--acc: {{ accent }}; min-height:100vh; background:var(--stage); display:flex; flex-direction:column; align-items:center; gap:22px; padding:44px 24px 64px; transition:background 400ms ease">
+
+  <div style="display:flex; flex-direction:column; gap:6px; align-items:center; text-align:center; max-width:560px">
+    <div style="font:600 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--stage-ink); white-space:nowrap">Campus Bus Tracker</div>
+    <div style="font:400 13px/1.5 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--stage-ink); text-wrap:pretty">Interactive prototype. Drag the sheet, pull the list to refresh, switch appearance.</div>
+  </div>
+
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center">
+    <div ref="{{ stageTrackRef }}" style="position:relative; display:flex; gap:2px; padding:2px; background:var(--fill); border-radius:9px">
+      <div ref="{{ stageThumbRef }}" style="position:absolute; top:2px; bottom:2px; left:0; width:0; border-radius:7px; background:var(--thumb); box-shadow:var(--thumb-sh); will-change:transform"></div>
+      <div onClick="{{ setSystem }}" style="padding:5px 11px; border-radius:7px; font:500 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); cursor:pointer; position:relative; z-index:1; background:transparent">System</div>
+      <div onClick="{{ setLight }}" style="padding:5px 11px; border-radius:7px; font:500 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); cursor:pointer; position:relative; z-index:1; background:transparent">Light</div>
+      <div onClick="{{ setDark }}" style="padding:5px 11px; border-radius:7px; font:500 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); cursor:pointer; position:relative; z-index:1; background:transparent">Dark</div>
+    </div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center">
+      <div onClick="{{ goAuth }}" style="padding:5px 11px; border-radius:8px; background:var(--fill); white-space:nowrap; font:500 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); cursor:pointer">Auth</div>
+      <div onClick="{{ goList }}" style="padding:5px 11px; border-radius:8px; background:var(--fill); white-space:nowrap; font:500 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); cursor:pointer">Buses</div>
+      <div onClick="{{ goBus }}" style="padding:5px 11px; border-radius:8px; background:var(--fill); white-space:nowrap; font:500 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); cursor:pointer">Live status</div>
+      <div onClick="{{ goSettings }}" style="padding:5px 11px; border-radius:8px; background:var(--fill); white-space:nowrap; font:500 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); cursor:pointer">Settings</div>
+    </div>
+  </div>
+
+  <!-- ===== device ===== -->
+  <div style="position:relative; width:417px; height:876px; border-radius:66px; padding:12px; background:linear-gradient(160deg,#3a3a3c,#1c1c1e 40%,#000); box-shadow:0 30px 70px rgba(0,0,0,.28), 0 2px 6px rgba(0,0,0,.3); flex:none">
+    <div style="position:relative; width:393px; height:852px; border-radius:54px; overflow:hidden; background:var(--bg); transition:background 400ms ease">
+
+      <!-- status bar -->
+      <div style="position:absolute; top:0; left:0; right:0; height:54px; z-index:60; display:flex; align-items:flex-end; justify-content:space-between; padding:0 30px 8px; pointer-events:none; color:var(--label)">
+        <div style="font:600 15px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.01em; width:54px">9:41</div>
+        <div style="display:flex; align-items:center; gap:6px">
+          <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.4 4.2a9.5 9.5 0 0 1 13.2 0"/><path d="M4 6.9a6 6 0 0 1 8 0"/><path d="M6.6 9.5a2.6 2.6 0 0 1 2.8 0"/></svg>
+          <svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x=".6" y=".6" width="21" height="11.8" rx="3.6" stroke="currentColor" stroke-opacity=".35"/><rect x="2.4" y="2.4" width="15" height="8.2" rx="2.2" fill="currentColor"/><path d="M23.4 4.4c1.1.4 1.1 3.8 0 4.2z" fill="currentColor" fill-opacity=".4"/></svg>
+        </div>
+      </div>
+
+      <!-- ============ AUTH ============ -->
+      <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute; inset:0; animation:scr-in 320ms ease both; background:var(--bg); overflow:hidden">
+          <div style="position:absolute; top:-140px; left:-80px; width:420px; height:420px; border-radius:50%; background:radial-gradient(circle at 50% 50%, var(--acc-soft), transparent 70%); filter:blur(10px)"></div>
+          <div style="position:absolute; bottom:-120px; right:-100px; width:380px; height:380px; border-radius:50%; background:radial-gradient(circle at 50% 50%, var(--acc-soft), transparent 70%); filter:blur(10px)"></div>
+
+          <div style="position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 34px 40px">
+            <div style="width:76px; height:76px; border-radius:20px; background:var(--acc); display:grid; place-items:center; box-shadow:var(--shadow); margin-bottom:26px">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="16" height="14" rx="3.5"/><path d="M4 12h16"/><path d="M7.5 17.5v2.2M16.5 17.5v2.2"/><circle cx="8.2" cy="14.7" r=".9" fill="#fff" stroke="none"/><circle cx="15.8" cy="14.7" r=".9" fill="#fff" stroke="none"/></svg>
+            </div>
+            <div style="font:700 34px/1.08 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.032em; color:var(--label); text-align:center; margin-bottom:14px; white-space:nowrap">Campus<br>Bus Tracker</div>
+            <div style="font:400 16px/1.45 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); text-align:center; max-width:280px; text-wrap:pretty">Live arrivals for every route between Kottayam and CEK Kidangoor.</div>
+
+            <div style="width:100%; display:flex; flex-direction:column; gap:14px; margin-top:56px">
+              <div onClick="{{ signInGoogle }}" style="height:54px; border-radius:15px; background:var(--acc); display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; box-shadow:0 6px 18px var(--acc-soft); transition:transform 110ms ease" style-active="transform:scale(.972)">
+                <div style="width:22px; height:22px; border-radius:6px; background:rgba(255,255,255,.92); display:grid; place-items:center; font:700 13px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--acc)">G</div>
+                <div style="font:600 16.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.01em; color:#fff; white-space:nowrap">Continue with Google</div>
+              </div>
+              <div onClick="{{ continueGuest }}" style="align-self:center; padding:10px 16px; border-radius:10px; font:500 15px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--acc); cursor:pointer; white-space:nowrap; transition:opacity 110ms ease" style-active="opacity:.5">Continue as Guest</div>
+            </div>
+          </div>
+
+          <div style="position:absolute; bottom:34px; left:0; right:0; text-align:center; font:400 12px/1.4 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab3)">Location is used only while you track a bus.</div>
+        </div>
+      </sc-if>
+
+      <!-- ============ BUS SELECTOR ============ -->
+      <sc-if value="{{ isList }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--bg); animation:scr-in 320ms ease both">
+          <div ref="{{ pullRef }}" onPointerDown="{{ pullDown }}" style="position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; padding:54px 0 40px; touch-action:pan-y" data-comment-anchor="eaa1b5fac0-div">
+
+            <div style="position:relative; height:0">
+              <div ref="{{ spinRef }}" style="position:absolute; top:-38px; left:0; right:0; display:flex; justify-content:center; opacity:0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lab3)" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 1-9 9" /></svg>
+              </div>
+            </div>
+
+            <div style="padding:14px 20px 2px; display:flex; align-items:flex-start; justify-content:space-between">
+              <div>
+                <div style="font:700 34px/1.1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.028em; color:var(--label)">Buses</div>
+                <div style="margin-top:5px; font:400 13px/1.3 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); white-space:nowrap">Updated {{ updated }} · 6 routes</div>
+              </div>
+              <div onClick="{{ goSettings }}" style="width:38px; height:38px; margin-top:4px; border-radius:50%; background:var(--fill); display:grid; place-items:center; cursor:pointer; color:var(--label)" data-comment-anchor="c2500fd9c9-div">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.8v2.7M12 18.5v2.7M21.2 12h-2.7M5.5 12H2.8M18.5 5.5l-1.9 1.9M7.4 16.6l-1.9 1.9M18.5 18.5l-1.9-1.9M7.4 7.4 5.5 5.5"/></svg>
+              </div>
+            </div>
+
+            <div style="padding:14px 20px 8px">
+              <div style="height:38px; border-radius:11px; background:var(--fill); display:flex; align-items:center; gap:7px; padding:0 10px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--lab2)" stroke-width="2.1" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+                <input value="{{ query }}" onChange="{{ onQuery }}" placeholder="Route number or stop" style="flex:1; border:none; outline:none; background:transparent; font:400 16px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); min-width:0" />
+                <sc-if value="{{ hasQuery }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ clearQuery }}" style="width:18px; height:18px; border-radius:50%; background:var(--lab3); display:grid; place-items:center; cursor:pointer">
+                    <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="var(--bg-el)" stroke-width="2" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+
+            <div style="padding:6px 16px 0">
+              <div style="border-radius:18px; background:var(--bg-el); box-shadow:var(--shadow); overflow:hidden">
+                <sc-for list="{{ buses }}" as="b" hint-placeholder-count="5">
+                  <div onClick="{{ b.open }}" style="position:relative; display:flex; align-items:center; gap:13px; padding:14px 14px 14px 16px; cursor:pointer; transition:background 120ms ease" style-active="background:var(--fill)">
+                    <div style="width:46px; height:46px; border-radius:13px; background:var(--fill); display:grid; place-items:center; flex:none">
+                      <div style="font:700 17px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.02em; color:var(--label)">{{ b.no }}</div>
+                    </div>
+                    <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:5px">
+                      <div style="font:600 16px/1.2 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.012em; color:var(--label); overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ b.name }}</div>
+                      <div style="display:flex; align-items:center; gap:6px; padding:3px 8px 3px 6px; border-radius:7px; align-self:flex-start; background:{{ b.pillBg }}">
+                        <sc-if value="{{ b.isOk }}" hint-placeholder-val="{{ true }}">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ b.pillFg }}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
+                        </sc-if>
+                        <sc-if value="{{ b.isLate }}" hint-placeholder-val="{{ false }}">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ b.pillFg }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>
+                        </sc-if>
+                        <sc-if value="{{ b.isWeak }}" hint-placeholder-val="{{ false }}">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ b.pillFg }}" stroke-width="2.1" stroke-linecap="round"><path d="M6 10.5a8.5 8.5 0 0 1 12 0"/><path d="M9 14a4.6 4.6 0 0 1 6 0"/><circle cx="12" cy="17.6" r="1.1" fill="{{ b.pillFg }}" stroke="none"/><path d="M3 3l18 18" stroke-width="1.9"/></svg>
+                        </sc-if>
+                        <sc-if value="{{ b.isOff }}" hint-placeholder-val="{{ false }}">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ b.pillFg }}" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 18.4 18.4 5.6"/></svg>
+                        </sc-if>
+                        <div style="font:600 11.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:.005em; color:{{ b.pillFg }}; white-space:nowrap">{{ b.status }}</div>
+                      </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex:none">
+                      <div style="font:600 15px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.02em; color:{{ b.etaColor }}">{{ b.eta }}</div>
+                      <svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="var(--lab3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg>
+                    </div>
+                    <div style="position:absolute; left:75px; right:0; bottom:0; height:1px; background:var(--sep); opacity:{{ b.sepOpacity }}"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="padding:16px 6px 0; font:400 12.5px/1.45 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab3); text-wrap:pretty">Pull down to refresh. Arrival times come from onboard GPS and, where enabled, from riders sharing location.</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ LIVE BUS STATUS ============ -->
+      <sc-if value="{{ isBus }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--bg); animation:scr-in 320ms ease both">
+
+          <x-import component-from-global-scope="campus-map" from="./campus-map.js" mode="{{ mapMode }}" progress="0.42" hint-size="100%,100%"></x-import>
+
+          <!-- frosted top bar -->
+          <div style="position:absolute; top:0; left:0; right:0; height:102px; z-index:40; background:var(--glass); backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); border-bottom:.5px solid var(--sep); display:flex; align-items:flex-end; padding:0 14px 10px; gap:8px">
+            <div onClick="{{ backFromBus }}" style="width:36px; height:36px; border-radius:50%; display:grid; place-items:center; cursor:pointer; color:var(--acc); flex:none" style-active="opacity:.5">
+              <svg width="11" height="19" viewBox="0 0 11 19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.6 1.6 9.5 9 17.4"/></svg>
+            </div>
+            <div style="flex:1; min-width:0; text-align:center">
+              <div style="font:600 17px/1.2 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.015em; color:var(--label)">Route 12</div>
+              <div style="margin-top:2px; display:flex; align-items:center; justify-content:center; gap:5px">
+                <div style="width:6px; height:6px; border-radius:50%; background:var(--green); animation:live 2s ease-in-out infinite"></div>
+                <div style="font:500 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2)">Live · Kottayam ⇄ CEK</div>
+              </div>
+            </div>
+            <div onClick="{{ openNotif }}" style="position:relative; width:36px; height:36px; border-radius:50%; display:grid; place-items:center; cursor:pointer; color:var(--acc); flex:none" style-active="opacity:.5">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5"/><path d="M10 18.5a2.2 2.2 0 0 0 4 0"/></svg>
+              <sc-if value="{{ hasBadge }}" hint-placeholder-val="{{ true }}">
+                <div style="position:absolute; top:3px; right:3px; min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:#FF3B30; border:1.5px solid var(--glass); display:grid; place-items:center; font:700 10px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:#fff">{{ badge }}</div>
+              </sc-if>
+            </div>
+          </div>
+
+          <!-- degraded-GPS prompt -->
+          <sc-if value="{{ gpsWeak }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ openCollab }}" style="position:absolute; top:114px; left:14px; right:14px; z-index:35; padding:11px 12px; border-radius:15px; background:var(--glass); backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); box-shadow:var(--shadow); display:flex; align-items:center; gap:10px; cursor:pointer" style-active="transform:scale(.985)">
+              <div style="width:28px; height:28px; border-radius:9px; background:var(--orange-bg); display:grid; place-items:center; flex:none">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.1" stroke-linecap="round"><path d="M6 10.5a8.5 8.5 0 0 1 12 0"/><path d="M9 14a4.6 4.6 0 0 1 6 0"/><circle cx="12" cy="17.6" r="1.1" fill="var(--orange)" stroke="none"/><path d="M3 3l18 18" stroke-width="1.9"/></svg>
+              </div>
+              <div style="flex:1; min-width:0">
+                <div style="font:600 13.5px/1.25 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label)">GPS signal weak on this bus</div>
+                <div style="margin-top:2px; font:400 12px/1.3 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2)">Riders can improve accuracy</div>
+              </div>
+              <svg width="7" height="12" viewBox="0 0 8 13" fill="none" stroke="var(--lab3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg>
+            </div>
+          </sc-if>
+
+          <!-- recenter -->
+          <div ref="{{ recenterRef }}" onClick="{{ recenter }}" style="position:absolute; right:14px; bottom:236px; z-index:30; width:42px; height:42px; border-radius:50%; background:var(--glass); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%); box-shadow:var(--shadow); display:grid; place-items:center; cursor:pointer; color:var(--acc)" style-active="transform:scale(.94)">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 13.5 21l-2-7.5L4 11.5z"/></svg>
+          </div>
+
+          <!-- ===== draggable bottom sheet ===== -->
+          <div ref="{{ sheetRef }}" style="position:absolute; left:0; right:0; bottom:0; height:648px; z-index:45; transform:translateY(444px); border-radius:26px 26px 0 0; background:var(--glass); backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%); box-shadow:var(--sheet-shadow); overflow:hidden; will-change:transform; touch-action:none">
+
+            <div onPointerDown="{{ sheetDown }}" style="padding:8px 0 0; cursor:grab">
+              <div style="width:38px; height:5px; border-radius:3px; background:var(--lab3); margin:0 auto"></div>
+
+              <div style="padding:14px 20px 16px">
+                <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:14px">
+                  <div style="min-width:0">
+                    <div style="font:500 12px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; color:var(--lab2)">Next stop</div>
+                    <div style="margin-top:7px; font:600 22px/1.15 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.02em; color:var(--label)">Ayarkunnam</div>
+                    <div style="margin-top:9px; display:inline-flex; align-items:center; gap:6px; padding:4px 9px 4px 7px; border-radius:8px; background:var(--green-bg)">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
+                      <div style="font:600 11.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--green)">On time</div>
+                    </div>
+                  </div>
+                  <div style="display:flex; align-items:baseline; gap:5px; flex:none">
+                    <div style="font:700 62px/.9 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.045em; font-variant-numeric:tabular-nums; color:var(--label)">{{ eta }}</div>
+                    <div style="font:600 19px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.02em; color:var(--lab2)">min</div>
+                  </div>
+                </div>
+              </div>
+              <div style="height:1px; background:var(--sep); margin:0 20px"></div>
+            </div>
+
+            <div ref="{{ sheetScrollRef }}" style="height:490px; overflow-y:hidden; overflow-x:hidden; padding:16px 20px 40px">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px">
+                <div style="font:600 15px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.012em; color:var(--label)">Upcoming stops</div>
+                <div style="font:400 12.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2)">Arrives CEK 10:05</div>
+              </div>
+
+              <sc-for list="{{ stops }}" as="s" hint-placeholder-count="7">
+                <div style="position:relative; display:flex; align-items:flex-start; gap:14px; padding:11px 0; opacity:{{ s.op }}">
+                  <div style="position:relative; width:20px; flex:none; display:flex; justify-content:center; padding-top:3px">
+                    <div style="position:absolute; top:{{ s.railTop }}; bottom:{{ s.railBottom }}; width:2px; background:{{ s.railColor }}; border-radius:1px"></div>
+                    <div style="position:relative; width:{{ s.dotSize }}; height:{{ s.dotSize }}; border-radius:50%; background:{{ s.dotBg }}; box-shadow:{{ s.dotRing }}"></div>
+                  </div>
+                  <div style="flex:1; min-width:0">
+                    <div style="font:{{ s.nameFont }}; letter-spacing:-.012em; color:{{ s.nameColor }}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ s.name }}</div>
+                    <div style="margin-top:3px; font:400 12.5px/1.3 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2)">{{ s.sub }}</div>
+                  </div>
+                  <div style="flex:none; text-align:right; font:{{ s.etaFont }}; letter-spacing:-.018em; font-variant-numeric:tabular-nums; color:{{ s.etaColor }}; padding-top:1px">{{ s.eta }}</div>
+                </div>
+              </sc-for>
+
+              <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ goAuth }}" style="margin-top:14px; padding:13px 16px; border-radius:16px; background:var(--acc-soft); display:flex; align-items:center; gap:12px; cursor:pointer">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10.5" rx="3"/><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9"/></svg>
+                  <div style="flex:1; min-width:0">
+                    <div style="font:600 14px/1.25 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label)">Sign in to see all 6 routes</div>
+                    <div style="margin-top:2px; font:400 12.5px/1.3 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2)">Guests can track one linked bus</div>
+                  </div>
+                  <svg width="7" height="12" viewBox="0 0 8 13" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg>
+                </div>
+              </sc-if>
+              <div onClick="{{ openCollab }}" style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--fill); display:flex; align-items:center; gap:12px; cursor:pointer">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M16.5 6.2a3 3 0 0 1 0 5.6"/><path d="M18 19h2.5c-.3-2-1.2-3.4-2.6-4.2"/></svg>
+                <div style="flex:1; min-width:0">
+                  <div style="font:600 14px/1.25 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label)">Rider-assisted tracking</div>
+                  <div style="margin-top:2px; font:400 12.5px/1.3 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2)">{{ ridersLabel }} on this bus</div>
+                </div>
+                <svg width="7" height="12" viewBox="0 0 8 13" fill="none" stroke="var(--lab3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg>
+              </div>
+
+              <div onClick="{{ goSettings }}" style="margin-top:10px; padding:14px 16px; border-radius:16px; background:var(--fill); display:flex; align-items:center; gap:12px; cursor:pointer" style-active="opacity:.6">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--lab2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.8v2.7M12 18.5v2.7M21.2 12h-2.7M5.5 12H2.8M18.5 5.5l-1.9 1.9M7.4 16.6l-1.9 1.9M18.5 18.5l-1.9-1.9M7.4 7.4 5.5 5.5"/></svg>
+                <div style="flex:1; min-width:0">
+                  <div style="font:600 14px/1.25 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label)">Settings</div>
+                  <div style="margin-top:2px; font:400 12.5px/1.3 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2)">Appearance, alerts, linked bus</div>
+                </div>
+                <svg width="7" height="12" viewBox="0 0 8 13" fill="none" stroke="var(--lab3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ SETTINGS ============ -->
+      <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--bg-group); animation:scr-in 320ms ease both; overflow-y:auto; padding:54px 0 40px">
+          <div style="display:flex; align-items:center; gap:4px; padding:6px 10px 0">
+            <div onClick="{{ backFromSettings }}" style="display:flex; align-items:center; gap:5px; padding:8px 8px; border-radius:10px; cursor:pointer; color:var(--acc)" style-active="opacity:.5">
+              <svg width="10" height="17" viewBox="0 0 11 19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.6 1.6 9.5 9 17.4"/></svg>
+              <div style="font:400 17px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.015em">{{ settingsBackLabel }}</div>
+            </div>
+          </div>
+          <div style="padding:8px 20px 18px; font:700 34px/1.1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.028em; color:var(--label)">Settings</div>
+
+          <div style="padding:0 16px">
+            <div style="font:500 12.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:.04em; text-transform:uppercase; color:var(--lab2); padding:0 6px 8px">Appearance</div>
+            <div style="border-radius:16px; background:var(--bg-el); padding:14px; box-shadow:var(--shadow)">
+              <div ref="{{ appTrackRef }}" style="position:relative; display:flex; gap:2px; padding:2px; background:var(--fill); border-radius:9px">
+                <div ref="{{ appThumbRef }}" style="position:absolute; top:2px; bottom:2px; left:0; width:0; border-radius:7px; background:var(--thumb); box-shadow:var(--thumb-sh); will-change:transform"></div>
+                <div onClick="{{ setSystem }}" style="flex:1; text-align:center; padding:7px 0; border-radius:7px; font:500 13.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); cursor:pointer; position:relative; z-index:1; background:transparent">System</div>
+                <div onClick="{{ setLight }}" style="flex:1; text-align:center; padding:7px 0; border-radius:7px; font:500 13.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); cursor:pointer; position:relative; z-index:1; background:transparent">Light</div>
+                <div onClick="{{ setDark }}" style="flex:1; text-align:center; padding:7px 0; border-radius:7px; font:500 13.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); cursor:pointer; position:relative; z-index:1; background:transparent">Dark</div>
+              </div>
+              <div style="margin-top:10px; font:400 12.5px/1.4 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2)">{{ appearanceNote }}</div>
+            </div>
+
+            <div style="height:26px"></div>
+            <div style="font:500 12.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:.04em; text-transform:uppercase; color:var(--lab2); padding:0 6px 8px">Notifications</div>
+            <div style="border-radius:16px; background:var(--bg-el); box-shadow:var(--shadow); overflow:hidden">
+              <div style="padding:14px 16px">
+                <div style="font:400 16px/1.2 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.012em; color:var(--label)">Notify me before arrival</div>
+                <div ref="{{ leadTrackRef }}" style="position:relative; margin-top:12px; display:flex; gap:2px; padding:2px; background:var(--fill); border-radius:9px">
+                  <div ref="{{ leadThumbRef }}" style="position:absolute; top:2px; bottom:2px; left:0; width:0; border-radius:7px; background:var(--thumb); box-shadow:var(--thumb-sh); will-change:transform"></div>
+                  <div onClick="{{ setLead2 }}" style="flex:1; text-align:center; padding:7px 0; border-radius:7px; font:500 13.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); cursor:pointer; position:relative; z-index:1; background:transparent" data-comment-anchor="74506e78da-div">2 min</div>
+                  <div onClick="{{ setLead5 }}" style="flex:1; text-align:center; padding:7px 0; border-radius:7px; font:500 13.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); cursor:pointer; position:relative; z-index:1; background:transparent">5 min</div>
+                  <div onClick="{{ setLead10 }}" style="flex:1; text-align:center; padding:7px 0; border-radius:7px; font:500 13.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); cursor:pointer; position:relative; z-index:1; background:transparent">10 min</div>
+                </div>
+              </div>
+              <div style="height:1px; background:var(--sep); margin-left:16px"></div>
+              <div onClick="{{ openNotif }}" style="display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer">
+                <div style="flex:1; font:400 16px/1.2 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.012em; color:var(--label)">Notification history</div>
+                <div style="font:400 15px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); white-space:nowrap">{{ badge }} new</div>
+                <svg width="7" height="12" viewBox="0 0 8 13" fill="none" stroke="var(--lab3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg>
+              </div>
+            </div>
+
+            <div style="height:26px"></div>
+            <div style="font:500 12.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:.04em; text-transform:uppercase; color:var(--lab2); padding:0 6px 8px">My bus</div>
+            <div style="border-radius:16px; background:var(--bg-el); box-shadow:var(--shadow); overflow:hidden">
+              <div onClick="{{ goBus }}" style="display:flex; align-items:center; gap:13px; padding:13px 16px; cursor:pointer">
+                <div style="width:34px; height:34px; border-radius:10px; background:var(--acc-soft); display:grid; place-items:center; flex:none">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="16" height="14" rx="3.5"/><path d="M4 12h16"/><path d="M7.5 17.5v2.2M16.5 17.5v2.2"/></svg>
+                </div>
+                <div style="flex:1; min-width:0">
+                  <div style="font:400 16px/1.2 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.012em; color:var(--label)">Linked bus</div>
+                </div>
+                <div style="font:400 15px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); white-space:nowrap">Route 12</div>
+                <svg width="7" height="12" viewBox="0 0 8 13" fill="none" stroke="var(--lab3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg>
+              </div>
+              <div style="height:1px; background:var(--sep); margin-left:63px"></div>
+              <div onClick="{{ openCollab }}" style="display:flex; align-items:center; gap:13px; padding:13px 16px; cursor:pointer">
+                <div style="width:34px; height:34px; border-radius:10px; background:var(--fill); display:grid; place-items:center; flex:none">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--label)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+                </div>
+                <div style="flex:1; min-width:0">
+                  <div style="font:400 16px/1.2 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.012em; color:var(--label)">Location sharing</div>
+                </div>
+                <div style="font:400 15px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); white-space:nowrap">{{ sharingLabel }}</div>
+                <svg width="7" height="12" viewBox="0 0 8 13" fill="none" stroke="var(--lab3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg>
+              </div>
+            </div>
+
+            <div style="height:26px"></div>
+            <div style="border-radius:16px; background:var(--bg-el); box-shadow:var(--shadow); overflow:hidden">
+              <div onClick="{{ goAuth }}" style="padding:14px 16px; text-align:center; cursor:pointer; font:400 16px/1.2 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--red)" style-active="background:var(--fill)">Sign out</div>
+            </div>
+            <div style="padding:18px 6px 0; text-align:center; font:400 12px/1.4 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab3)">Campus Bus Tracker 1.0 (24)<br>College of Engineering Kidangoor</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== collaborate modal ===== -->
+      <div ref="{{ collabScrimRef }}" onClick="{{ closeCollab }}" style="position:absolute; inset:0; z-index:70; background:rgba(0,0,0,.32); opacity:0; pointer-events:none"></div>
+      <div ref="{{ collabRef }}" style="position:absolute; left:0; right:0; bottom:0; z-index:71; transform:translateY(460px); border-radius:26px 26px 0 0; background:var(--glass); box-shadow:var(--sheet-shadow); padding:10px 20px 34px; will-change:transform; pointer-events:none">
+        <div style="width:38px; height:5px; border-radius:3px; background:var(--lab3); margin:0 auto 18px"></div>
+        <div style="display:flex; align-items:flex-start; gap:13px">
+          <div style="width:38px; height:38px; border-radius:12px; background:var(--orange-bg); display:grid; place-items:center; flex:none">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2" stroke-linecap="round"><path d="M6 10.5a8.5 8.5 0 0 1 12 0"/><path d="M9 14a4.6 4.6 0 0 1 6 0"/><circle cx="12" cy="17.6" r="1.1" fill="var(--orange)" stroke="none"/><path d="M3 3l18 18" stroke-width="1.8"/></svg>
+          </div>
+          <div style="flex:1; min-width:0">
+            <div style="font:700 22px/1.2 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.024em; color:var(--label)">Help track this bus</div>
+            <div style="margin-top:7px; font:400 14px/1.45 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); text-wrap:pretty">The onboard GPS on Route 12 is reporting a weak signal. Riders sharing location keep arrival times accurate.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px; border-radius:16px; background:var(--bg-el); overflow:hidden">
+          <div style="display:flex; align-items:center; gap:14px; padding:14px 16px">
+            <div style="flex:1; min-width:0; font:400 16px/1.3 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.012em; color:var(--label); text-wrap:pretty">Share my location while I'm on this bus</div>
+            <div onClick="{{ toggleSharing }}" style="width:51px; height:31px; border-radius:16px; background:{{ toggleBg }}; padding:2px; flex:none; cursor:pointer; transition:background 240ms ease">
+              <div style="width:27px; height:27px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.2); transform:translateX({{ toggleX }}); transition:transform 280ms cubic-bezier(.32,.72,0,1)"></div>
+            </div>
+          </div>
+          <div style="height:1px; background:var(--sep); margin-left:16px"></div>
+          <div style="display:flex; align-items:center; gap:9px; padding:13px 16px">
+            <div style="width:7px; height:7px; border-radius:50%; background:var(--green); animation:live 2s ease-in-out infinite; flex:none"></div>
+            <div style="flex:1; font:500 14px/1.2 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label)">{{ ridersLabel }}</div>
+            <div style="display:flex; align-items:center; gap:5px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6l2.4 1.9 3-.3 1 2.9 2.6 1.6-1 2.9 1 2.9-2.6 1.6-1 2.9-3-.3L12 21.4 9.6 19.5l-3 .3-1-2.9L3 15.3l1-2.9-1-2.9 2.6-1.6 1-2.9 3 .3z"/><path d="M8.6 12.2l2.3 2.3 4.5-4.7"/></svg>
+              <div style="font:500 12.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--acc)">Verified by admin</div>
+            </div>
+          </div>
+        </div>
+
+        <div onClick="{{ closeCollab }}" style="margin-top:18px; height:52px; border-radius:15px; background:var(--acc); display:grid; place-items:center; cursor:pointer; font:600 17px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.01em; color:#fff" style-active="transform:scale(.98)">{{ collabCta }}</div>
+        <div style="margin-top:12px; text-align:center; font:400 12px/1.4 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab3)">Sharing stops automatically when you leave the route.</div>
+      </div>
+
+      <!-- ===== notification slide-over ===== -->
+      <div ref="{{ notifScrimRef }}" onClick="{{ closeNotif }}" style="position:absolute; inset:0; z-index:80; background:rgba(0,0,0,.24); opacity:0; pointer-events:none"></div>
+      <div ref="{{ notifRef }}" style="position:absolute; top:0; bottom:0; right:0; width:338px; z-index:81; transform:translateX(346px); border-radius:26px 0 0 26px; background:var(--glass); box-shadow:-16px 0 44px rgba(0,0,0,.22); padding:60px 0 0; will-change:transform; pointer-events:none; overflow:hidden">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 18px 12px">
+          <div style="font:700 24px/1.15 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.026em; color:var(--label)">Alerts</div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <div onClick="{{ toggleEmpty }}" style="padding:5px 9px; border-radius:8px; background:var(--fill); font:500 11.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); cursor:pointer">{{ emptyToggleLabel }}</div>
+            <div onClick="{{ closeNotif }}" style="width:30px; height:30px; border-radius:50%; background:var(--fill); display:grid; place-items:center; cursor:pointer">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="var(--lab2)" stroke-width="2.1" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <sc-if value="{{ notifEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="height:640px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:0 34px 60px; text-align:center">
+            <svg width="132" height="112" viewBox="0 0 132 112" fill="none">
+              <circle cx="66" cy="54" r="43" stroke="var(--sep)" stroke-width="2" stroke-dasharray="5 7"/>
+              <path d="M66 30a13 13 0 0 1 13 13c0 11 4 14 4 14H49s4-3 4-14a13 13 0 0 1 13-13z" stroke="var(--lab3)" stroke-width="2.2" stroke-linejoin="round"/>
+              <path d="M61 61.5a5 5 0 0 0 10 0" stroke="var(--lab3)" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M66 27v-4" stroke="var(--lab3)" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M92 44l7-4M40 44l-7-4M96 60l6 1M36 60l-6 1" stroke="var(--acc)" stroke-width="2.2" stroke-linecap="round" stroke-opacity=".55"/>
+              <path d="M52 84h28" stroke="var(--sep)" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <div style="font:600 19px/1.25 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:-.02em; color:var(--label)">You're all caught up.</div>
+              <div style="margin-top:7px; font:400 14px/1.45 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2); text-wrap:pretty">New alerts for Route 12 show up here.</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ notifFull }}" hint-placeholder-val="{{ true }}">
+          <div style="height:730px; overflow-y:auto; padding:0 14px 40px">
+            <sc-for list="{{ notifGroups }}" as="g" hint-placeholder-count="2">
+              <div style="margin-bottom:18px">
+                <div style="padding:6px 6px 8px; font:600 12.5px/1 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; letter-spacing:.04em; text-transform:uppercase; color:var(--lab2)">{{ g.day }}</div>
+                <div style="border-radius:16px; background:var(--bg-el); overflow:hidden">
+                  <sc-for list="{{ g.items }}" as="n" hint-placeholder-count="3">
+                    <div style="position:relative; display:flex; gap:11px; padding:12px 13px">
+                      <div style="width:30px; height:30px; border-radius:10px; background:{{ n.iconBg }}; display:grid; place-items:center; flex:none">
+                        <sc-if value="{{ n.isBell }}" hint-placeholder-val="{{ true }}">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ n.iconFg }}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5"/><path d="M10 18.5a2.2 2.2 0 0 0 4 0"/></svg>
+                        </sc-if>
+                        <sc-if value="{{ n.isClock }}" hint-placeholder-val="{{ false }}">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ n.iconFg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>
+                        </sc-if>
+                        <sc-if value="{{ n.isSignal }}" hint-placeholder-val="{{ false }}">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ n.iconFg }}" stroke-width="2" stroke-linecap="round"><path d="M6 11a8.5 8.5 0 0 1 12 0"/><path d="M9 14.5a4.6 4.6 0 0 1 6 0"/><circle cx="12" cy="18" r="1.1" fill="{{ n.iconFg }}" stroke="none"/></svg>
+                        </sc-if>
+                        <sc-if value="{{ n.isCheck }}" hint-placeholder-val="{{ false }}">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ n.iconFg }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
+                        </sc-if>
+                      </div>
+                      <div style="flex:1; min-width:0">
+                        <div style="font:600 13.5px/1.35 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--label); text-wrap:pretty">{{ n.msg }}</div>
+                        <div style="margin-top:3px; font:400 12px/1.3 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--lab2)">{{ n.route }} · {{ n.time }}</div>
+                      </div>
+                      <sc-if value="{{ n.unread }}" hint-placeholder-val="{{ false }}">
+                        <div style="width:8px; height:8px; border-radius:50%; background:var(--acc); flex:none; margin-top:4px"></div>
+                      </sc-if>
+                      <div style="position:absolute; left:54px; right:0; bottom:0; height:1px; background:var(--sep); opacity:{{ n.sepOpacity }}"></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- home indicator -->
+      <div style="position:absolute; bottom:9px; left:50%; width:140px; height:5px; margin-left:-70px; border-radius:3px; background:var(--label); opacity:.32; z-index:90; pointer-events:none"></div>
+    </div>
+  </div>
+
+  <div style="max-width:560px; text-align:center; font:400 12px/1.55 -apple-system,'SF Pro Text','Inter Tight',system-ui,sans-serif; color:var(--stage-ink); text-wrap:pretty">Map: OpenStreetMap data, Apple-Maps-style treatment. Route line connects the real coordinates of the seven Kottayam ⇄ CEK Kidangoor stops.</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 520, &quot;height&quot;: 1080 },
+  &quot;startScreen&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;auth&quot;, &quot;list&quot;, &quot;bus&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;auth&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Prototype&quot; },
+  &quot;defaultAppearance&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;system&quot;, &quot;light&quot;, &quot;dark&quot;], &quot;default&quot;: &quot;system&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Prototype&quot; },
+  &quot;gpsDegraded&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Prototype&quot; },
+  &quot;notificationsEmpty&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Prototype&quot; },
+  &quot;riders&quot;: { &quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 3, &quot;min&quot;: 1, &quot;max&quot;: 9, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Prototype&quot; },
+  &quot;accentColor&quot;: { &quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#007AFF&quot;, &quot;options&quot;: [&quot;#007AFF&quot;, &quot;#30B0C7&quot;, &quot;#5E5CE6&quot;, &quot;#FF9500&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Style&quot; }
+}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      theme: this.props.defaultAppearance || 'system',
+      sysDark: false,
+      screen: this.props.startScreen || 'auth',
+      authed: (this.props.startScreen || 'auth') === 'list',
+      query: '',
+      updated: 'just now',
+      sharing: false,
+      riders: this.props.riders != null ? this.props.riders : 3,
+      notifOpen: false,
+      notifEmpty: !!this.props.notificationsEmpty,
+      lead: '5 min',
+      expanded: false,
+      eta: 6,
+      badge: 2,
+    };
+    this.sheetRef = React.createRef();
+    this.sheetScrollRef = React.createRef();
+    this.notifRef = React.createRef();
+    this.notifScrimRef = React.createRef();
+    this.collabRef = React.createRef();
+    this.collabScrimRef = React.createRef();
+    this.pullRef = React.createRef();
+    this.spinRef = React.createRef();
+    this.recenterRef = React.createRef();
+    this.appTrackRef = React.createRef();
+    this.appThumbRef = React.createRef();
+    this.leadTrackRef = React.createRef();
+    this.leadThumbRef = React.createRef();
+    this.stageTrackRef = React.createRef();
+    this.stageThumbRef = React.createRef();
+    this._thumbX = { app: 0, lead: 0, stage: 0 };
+
+    this.SHEET_UP = 0;
+    this.SHEET_DOWN = 444;
+    this.sheetY = this.SHEET_DOWN;
+    this.notifX = 346;
+    this.collabY = 460;
+    this._anims = {};
+  }
+
+  /* ---------- theme ---------- */
+  componentDidMount() {
+    this._mq = window.matchMedia('(prefers-color-scheme: dark)');
+    this._onMq = () => this.setState({ sysDark: this._mq.matches });
+    this._mq.addEventListener('change', this._onMq);
+    this.setState({ sysDark: this._mq.matches });
+    this._rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+  }
+  componentWillUnmount() {
+    if (this._mq) this._mq.removeEventListener('change', this._onMq);
+    Object.keys(this._anims).forEach((k) => this._stop(k));
+    if (this._riderTimer) clearInterval(this._riderTimer);
+  }
+  get dark() {
+    if (this.state.theme === 'dark') return true;
+    if (this.state.theme === 'light') return false;
+    return this.state.sysDark;
+  }
+
+  /* ---------- spring engine: interruptible, velocity-aware ---------- */
+  _stop(key) {
+    const a = this._anims[key];
+    if (a) { cancelAnimationFrame(a.raf); delete this._anims[key]; }
+  }
+  _spring(key, from, to, opts) {
+    this._stop(key);
+    const o = opts || {};
+    const onUpdate = o.onUpdate;
+    if (this._rm && this._rm.matches) { onUpdate(to); if (o.onDone) o.onDone(); return; }
+    const zeta = 1 - (o.bounce || 0);
+    const resp = o.response || 0.36;
+    const w = (2 * Math.PI) / resp;
+    const k = w * w;
+    const c = 2 * zeta * w;
+    let x = from;
+    let v = o.velocity || 0;
+    let last = performance.now();
+    const rec = { raf: 0 };
+    this._anims[key] = rec;
+    const step = (now) => {
+      const dt = Math.min(0.032, (now - last) / 1000);
+      last = now;
+      v += (-k * (x - to) - c * v) * dt;
+      x += v * dt;
+      if (Math.abs(x - to) < 0.35 && Math.abs(v) < 4) {
+        onUpdate(to);
+        delete this._anims[key];
+        if (o.onDone) o.onDone();
+        return;
+      }
+      onUpdate(x);
+      rec.raf = requestAnimationFrame(step);
+    };
+    rec.raf = requestAnimationFrame(step);
+  }
+  /* Apple's momentum projection (Designing Fluid Interfaces) */
+  _project(v, d) {
+    const rate = d || 0.998;
+    return ((v / 1000) * rate) / (1 - rate);
+  }
+  _rubber(over, dim, k) {
+    const c = k || 0.55;
+    return (over * dim * c) / (dim + c * Math.abs(over));
+  }
+
+  /* ---------- segmented control: thumb springs across, stretching while it travels ---------- */
+  _moveThumb(key, trackRef, thumbRef, index, animate) {
+    const track = trackRef.current;
+    const thumb = thumbRef.current;
+    if (!track || !thumb) return;
+    const segs = Array.prototype.filter.call(track.children, (c) => c !== thumb);
+    const seg = segs[index];
+    if (!seg) return;
+    const left = seg.offsetLeft;
+    const w = seg.offsetWidth;
+    if (!w) return;
+    thumb.style.width = w + 'px';
+    const paint = (x, to) => {
+      const stretch = 1 + Math.min(0.14, Math.abs(to - x) / 900);
+      const squash = 1 - (stretch - 1) * 0.5;
+      thumb.style.transform = 'translateX(' + x + 'px) scale(' + stretch + ',' + squash + ')';
+      this._thumbX[key] = x;
+    };
+    if (animate === false || Math.abs(this._thumbX[key] - left) < 0.5) { paint(left, left); return; }
+    this._spring('thumb-' + key, this._thumbX[key], left, {
+      bounce: 0.22,
+      response: 0.36,
+      onUpdate: (v) => paint(v, left),
+    });
+  }
+  _syncThumbs(animate) {
+    const themes = ['system', 'light', 'dark'];
+    const leads = ['2 min', '5 min', '10 min'];
+    this._moveThumb('stage', this.stageTrackRef, this.stageThumbRef, themes.indexOf(this.state.theme), animate);
+    this._moveThumb('app', this.appTrackRef, this.appThumbRef, themes.indexOf(this.state.theme), animate);
+    this._moveThumb('lead', this.leadTrackRef, this.leadThumbRef, leads.indexOf(this.state.lead), animate);
+  }
+  _queueThumbs() {
+    const first = !this._thumbsReady;
+    this._thumbsReady = true;
+    requestAnimationFrame(() => {
+      const t = this.stageTrackRef.current;
+      if (!t || !t.offsetWidth) { this._thumbsReady = false; return; }
+      this._syncThumbs(!first);
+    });
+  }
+
+  /* ---------- bottom sheet ---------- */
+  _setSheet(y) {
+    this.sheetY = y;
+    const el = this.sheetRef.current;
+    if (el) el.style.transform = 'translateY(' + y + 'px)';
+    const rc = this.recenterRef.current;
+    if (rc) {
+      const t = Math.max(0, Math.min(1, (this.SHEET_DOWN - y) / this.SHEET_DOWN));
+      rc.style.opacity = String(1 - t);
+      rc.style.transform = 'translateY(' + -t * 24 + 'px)';
+    }
+  }
+  _snapSheet(expanded) {
+    const s = this.sheetScrollRef.current;
+    if (s) {
+      s.style.overflowY = expanded ? 'auto' : 'hidden';
+      if (!expanded) s.scrollTop = 0;
+    }
+    if (this.state.expanded !== expanded) this.setState({ expanded: expanded });
+  }
+  sheetDown = (e) => {
+    const el = this.sheetRef.current;
+    if (!el) return;
+    this._stop('sheet');
+    el.setPointerCapture(e.pointerId);
+    const startY = e.clientY;
+    const base = this.sheetY;
+    let hist = [{ y: e.clientY, t: performance.now() }];
+    const move = (ev) => {
+      const dy = ev.clientY - startY;
+      let y = base + dy;
+      if (y < this.SHEET_UP) y = this.SHEET_UP + this._rubber(y - this.SHEET_UP, 400);
+      if (y > this.SHEET_DOWN) y = this.SHEET_DOWN + this._rubber(y - this.SHEET_DOWN, 300);
+      this._setSheet(y);
+      hist.push({ y: ev.clientY, t: performance.now() });
+      if (hist.length > 5) hist.shift();
+    };
+    const up = () => {
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+      const a = hist[0];
+      const b = hist[hist.length - 1];
+      const dt = Math.max(8, b.t - a.t);
+      const vel = ((b.y - a.y) / dt) * 1000;
+      const projected = this.sheetY + this._project(vel);
+      const mid = (this.SHEET_UP + this.SHEET_DOWN) / 2;
+      const target = projected < mid ? this.SHEET_UP : this.SHEET_DOWN;
+      const expanded = target === this.SHEET_UP;
+      this._snapSheet(expanded);
+      this._spring('sheet', this.sheetY, target, {
+        bounce: 0.18,
+        response: 0.34,
+        velocity: vel,
+        onUpdate: (v) => this._setSheet(v),
+      });
+    };
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+  };
+
+  /* ---------- overlays ---------- */
+  /* Blur costs a compositing layer, so the offscreen overlays only wear their
+     material while they are actually on screen. */
+  _glass(ref, on) {
+    const el = ref.current;
+    if (!el) return;
+    const v = on ? 'blur(30px) saturate(180%)' : '';
+    el.style.backdropFilter = v;
+    el.style.webkitBackdropFilter = v;
+  }
+  _setNotif(x) {
+    this.notifX = x;
+    const el = this.notifRef.current;
+    if (el) el.style.transform = 'translateX(' + x + 'px)';
+    const sc = this.notifScrimRef.current;
+    if (sc) sc.style.opacity = String(1 - x / 346);
+  }
+  openNotif = () => {
+    this.setState({ notifOpen: true, badge: 0 });
+    this._glass(this.notifRef, true);
+    const el = this.notifRef.current;
+    const sc = this.notifScrimRef.current;
+    if (el) el.style.pointerEvents = 'auto';
+    if (sc) sc.style.pointerEvents = 'auto';
+    this._spring('notif', this.notifX, 0, { bounce: 0, response: 0.4, onUpdate: (v) => this._setNotif(v) });
+  };
+  closeNotif = () => {
+    const el = this.notifRef.current;
+    const sc = this.notifScrimRef.current;
+    if (el) el.style.pointerEvents = 'none';
+    if (sc) sc.style.pointerEvents = 'none';
+    this._spring('notif', this.notifX, 346, {
+      bounce: 0, response: 0.36,
+      onUpdate: (v) => this._setNotif(v),
+      onDone: () => { this._glass(this.notifRef, false); this.setState({ notifOpen: false }); },
+    });
+  };
+  _setCollab(y) {
+    this.collabY = y;
+    const el = this.collabRef.current;
+    if (el) el.style.transform = 'translateY(' + y + 'px)';
+    const sc = this.collabScrimRef.current;
+    if (sc) sc.style.opacity = String(1 - y / 460);
+  }
+  openCollab = () => {
+    this._glass(this.collabRef, true);
+    const el = this.collabRef.current;
+    const sc = this.collabScrimRef.current;
+    if (el) el.style.pointerEvents = 'auto';
+    if (sc) sc.style.pointerEvents = 'auto';
+    this._spring('collab', this.collabY, 0, { bounce: 0.16, response: 0.34, onUpdate: (v) => this._setCollab(v) });
+  };
+  closeCollab = () => {
+    const el = this.collabRef.current;
+    const sc = this.collabScrimRef.current;
+    if (el) el.style.pointerEvents = 'none';
+    if (sc) sc.style.pointerEvents = 'none';
+    this._spring('collab', this.collabY, 460, { bounce: 0, response: 0.34, onUpdate: (v) => this._setCollab(v), onDone: () => this._glass(this.collabRef, false) });
+  };
+  toggleSharing = () => {
+    const on = !this.state.sharing;
+    this.setState({ sharing: on, riders: on ? this.state.riders + 1 : Math.max(1, this.state.riders - 1) });
+    if (this._riderTimer) { clearInterval(this._riderTimer); this._riderTimer = null; }
+    if (on) {
+      this._riderTimer = setInterval(() => {
+        this.setState((s) => {
+          const d = Math.random() < 0.5 ? -1 : 1;
+          return { riders: Math.max(2, Math.min(9, s.riders + d)) };
+        });
+      }, 4200);
+    }
+  };
+
+  /* ---------- pull to refresh ---------- */
+  pullDown = (e) => {
+    const el = this.pullRef.current;
+    if (!el || el.scrollTop > 0) return;
+    const startY = e.clientY;
+    let pulled = 0;
+    let active = false;
+    const move = (ev) => {
+      const dy = ev.clientY - startY;
+      if (dy <= 0 && !active) return;
+      if (el.scrollTop > 0) return;
+      active = true;
+      pulled = this._rubber(dy, 260, 0.62);
+      el.style.transform = 'translateY(' + Math.max(0, pulled) + 'px)';
+      const sp = this.spinRef.current;
+      if (sp) {
+        sp.style.opacity = String(Math.min(1, pulled / 46));
+        sp.style.transform = 'rotate(' + pulled * 3.2 + 'deg)';
+      }
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      const sp = this.spinRef.current;
+      const settle = (to) => this._spring('pull', pulled, to, {
+        bounce: 0, response: 0.34,
+        onUpdate: (v) => {
+          el.style.transform = 'translateY(' + v + 'px)';
+          if (sp) sp.style.opacity = String(Math.min(1, v / 46));
+        },
+      });
+      if (pulled > 60) {
+        if (sp) sp.style.animation = 'spin .8s linear infinite';
+        settle(52);
+        setTimeout(() => {
+          if (sp) sp.style.animation = '';
+          this.setState({ updated: 'just now' });
+          this._spring('pull', 52, 0, {
+            bounce: 0, response: 0.36,
+            onUpdate: (v) => {
+              el.style.transform = 'translateY(' + v + 'px)';
+              if (sp) sp.style.opacity = String(Math.min(1, v / 46));
+            },
+          });
+        }, 950);
+      } else {
+        settle(0);
+      }
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  /* ---------- nav ---------- */
+  _go = (screen) => {
+    this.closeNotif();
+    this.closeCollab();
+    this.setState({ screen: screen });
+    if (screen === 'bus') {
+      requestAnimationFrame(() => { this._setSheet(this.SHEET_DOWN); this._snapSheet(false); });
+    }
+  };
+  goAuth = () => { this.setState({ authed: false }); this._go('auth'); };
+  goList = () => { this.setState({ authed: true }); this._go('list'); };
+  /* Google sign-in unlocks the full route list; guests get their linked bus only. */
+  signInGoogle = () => { this.setState({ authed: true }); this._go('list'); };
+  continueGuest = () => { this.setState({ authed: false }); this._go('bus'); };
+  backFromBus = () => (this.state.authed ? this._go('list') : this._go('auth'));
+  goBus = () => this._go('bus');
+  goSettings = () => { this._from = this.state.screen; this._go('settings'); };
+  backFromSettings = () => this._go(this._from === 'bus' ? 'bus' : 'list');
+  setSystem = () => this.setState({ theme: 'system' });
+  setLight = () => this.setState({ theme: 'light' });
+  setDark = () => this.setState({ theme: 'dark' });
+  setLead2 = () => this.setState({ lead: '2 min' });
+  setLead5 = () => this.setState({ lead: '5 min' });
+  setLead10 = () => this.setState({ lead: '10 min' });
+  onQuery = (e) => this.setState({ query: e.target.value });
+  clearQuery = () => this.setState({ query: '' });
+  toggleEmpty = () => this.setState({ notifEmpty: !this.state.notifEmpty });
+  recenter = () => {
+    const m = document.querySelector('campus-map');
+    if (m && m.recenter) m.recenter(true);
+  };
+
+  /* ---------- data ---------- */
+  _buses(dark) {
+    const C = {
+      ok: { bg: 'var(--green-bg)', fg: 'var(--green)' },
+      late: { bg: 'var(--orange-bg)', fg: 'var(--orange)' },
+      weak: { bg: 'var(--orange-bg)', fg: 'var(--orange)' },
+      off: { bg: 'var(--gray-bg)', fg: 'var(--gray)' },
+    };
+    return [
+      { no: '12', name: 'Kottayam ⇄ CEK Kidangoor', st: 'ok', status: 'On Time', eta: '6 min' },
+      { no: '04', name: 'Town ⇄ Ayarkunnam', st: 'late', status: 'Delayed 7 min', eta: '18 min' },
+      { no: '27', name: 'Manthadi Loop', st: 'weak', status: 'GPS Signal Weak', eta: '~11 min' },
+      { no: '08', name: 'CEK ⇄ Kidangoor Junction', st: 'ok', status: 'On Time', eta: '3 min' },
+      { no: '19', name: 'KSRTC Stand ⇄ Manthadi', st: 'ok', status: 'On Time', eta: '24 min' },
+      { no: '33', name: 'Oravakal ⇄ Malam', st: 'off', status: 'Offline', eta: '—' },
+    ].map((b) => ({
+      ...b,
+      pillBg: C[b.st].bg,
+      pillFg: C[b.st].fg,
+      isOk: b.st === 'ok',
+      isLate: b.st === 'late',
+      isWeak: b.st === 'weak',
+      isOff: b.st === 'off',
+      etaColor: b.st === 'off' ? 'var(--lab3)' : b.st === 'ok' ? 'var(--label)' : 'var(--lab2)',
+      open: this.goBus,
+    }));
+  }
+
+  _stops() {
+    const rows = [
+      { name: 'Kottayam KSRTC', sub: 'Departed 9:22', eta: '9:22', state: 'past' },
+      { name: 'Malam', sub: 'Departed 9:31', eta: '9:31', state: 'past' },
+      { name: 'Oravakal', sub: 'Departed 9:38', eta: '9:38', state: 'past' },
+      { name: 'Ayarkunnam', sub: 'Next stop · on time', eta: '6 min', state: 'next' },
+      { name: 'Manthadi', sub: 'Scheduled 9:54', eta: '13 min', state: 'ahead' },
+      { name: 'Kidangoor Junction', sub: 'Scheduled 10:00', eta: '19 min', state: 'ahead' },
+      { name: 'College of Engineering Kidangoor', sub: 'Final stop · 10:05', eta: '24 min', state: 'ahead' },
+    ];
+    const last = rows.length - 1;
+    return rows.map((r, i) => {
+      const past = r.state === 'past';
+      const next = r.state === 'next';
+      return {
+        ...r,
+        op: past ? '0.42' : '1',
+        railTop: i === 0 ? '14px' : '0px',
+        railBottom: i === last ? 'calc(100% - 14px)' : '0px',
+        railColor: past ? 'var(--lab3)' : 'var(--acc-soft)',
+        dotSize: next ? '13px' : '9px',
+        dotBg: next ? 'var(--acc)' : past ? 'var(--lab3)' : 'var(--bg-el)',
+        dotRing: next
+          ? '0 0 0 4px var(--acc-soft)'
+          : past
+          ? 'none'
+          : '0 0 0 2px var(--lab3)',
+        nameFont: next
+          ? '600 17px/1.25 -apple-system,SF Pro Text,Inter Tight,system-ui,sans-serif'
+          : '500 15.5px/1.3 -apple-system,SF Pro Text,Inter Tight,system-ui,sans-serif',
+        nameColor: 'var(--label)',
+        etaFont: next
+          ? '700 17px/1.2 -apple-system,SF Pro Text,Inter Tight,system-ui,sans-serif'
+          : '500 14.5px/1.2 -apple-system,SF Pro Text,Inter Tight,system-ui,sans-serif',
+        etaColor: next ? 'var(--acc)' : past ? 'var(--lab3)' : 'var(--lab2)',
+      };
+    });
+  }
+
+  _notifs() {
+    const mk = (items) => items.map((n, i) => ({
+      ...n,
+      isBell: n.icon === 'bell',
+      isClock: n.icon === 'clock',
+      isSignal: n.icon === 'signal',
+      isCheck: n.icon === 'check',
+      iconBg: n.icon === 'clock' ? 'var(--orange-bg)' : n.icon === 'signal' ? 'var(--gray-bg)' : 'var(--acc-soft)',
+      iconFg: n.icon === 'clock' ? 'var(--orange)' : n.icon === 'signal' ? 'var(--gray)' : 'var(--acc)',
+      sepOpacity: i === items.length - 1 ? '0' : '1',
+    }));
+    return [
+      {
+        day: 'Today',
+        items: mk([
+          { msg: 'Your bus is 5 minutes away', route: 'Route 12', time: '9:33 AM', icon: 'bell', unread: true },
+          { msg: 'Route 12 delayed 7 min near Ayarkunnam', route: 'Route 12', time: '8:58 AM', icon: 'clock', unread: true },
+          { msg: 'GPS signal restored on Route 27', route: 'Route 27', time: '8:41 AM', icon: 'signal', unread: false },
+        ]),
+      },
+      {
+        day: 'Yesterday',
+        items: mk([
+          { msg: 'Your bus is 5 minutes away', route: 'Route 12', time: '5:12 PM', icon: 'bell', unread: false },
+          { msg: '3 riders shared location on your bus', route: 'Route 12', time: '5:02 PM', icon: 'check', unread: false },
+          { msg: 'Route 12 finished service for the day', route: 'Route 12', time: '7:40 PM', icon: 'check', unread: false },
+        ]),
+      },
+    ];
+  }
+
+  renderVals() {
+    const s = this.state;
+    this._queueThumbs();
+    const dark = this.dark;
+    const q = s.query.trim().toLowerCase();
+    let buses = this._buses(dark);
+    if (q) buses = buses.filter((b) => (b.no + ' ' + b.name + ' ' + b.status).toLowerCase().indexOf(q) >= 0);
+    buses = buses.map((b, i) => ({ ...b, sepOpacity: i === buses.length - 1 ? '0' : '1' }));
+
+    const gpsWeak = this.props.gpsDegraded !== false;
+
+    return {
+      themeAttr: dark ? 'dark' : 'light',
+      accent: this.props.accentColor || (dark ? '#0A84FF' : '#007AFF'),
+      mapMode: dark ? 'dark' : 'light',
+
+      isAuth: s.screen === 'auth',
+      isList: s.screen === 'list',
+      isBus: s.screen === 'bus',
+      isSettings: s.screen === 'settings',
+
+      goAuth: this.goAuth, goList: this.goList, goBus: this.goBus, goSettings: this.goSettings,
+      signInGoogle: this.signInGoogle, continueGuest: this.continueGuest, backFromBus: this.backFromBus,
+      isGuest: !s.authed, backLabel: s.authed ? 'Buses' : 'Sign in',
+      backFromSettings: this.backFromSettings,
+      settingsBackLabel: this._from === 'bus' ? 'Route 12' : 'Buses',
+      setSystem: this.setSystem, setLight: this.setLight, setDark: this.setDark,
+      setLead2: this.setLead2, setLead5: this.setLead5, setLead10: this.setLead10,
+      onQuery: this.onQuery, clearQuery: this.clearQuery, hasQuery: q.length > 0, query: s.query,
+      openNotif: this.openNotif, closeNotif: this.closeNotif,
+      openCollab: this.openCollab, closeCollab: this.closeCollab,
+      toggleSharing: this.toggleSharing, toggleEmpty: this.toggleEmpty,
+      sheetDown: this.sheetDown, pullDown: this.pullDown, recenter: this.recenter,
+
+      sheetRef: this.sheetRef, sheetScrollRef: this.sheetScrollRef,
+      notifRef: this.notifRef, notifScrimRef: this.notifScrimRef,
+      collabRef: this.collabRef, collabScrimRef: this.collabScrimRef,
+      pullRef: this.pullRef, spinRef: this.spinRef, recenterRef: this.recenterRef,
+      stageTrackRef: this.stageTrackRef, stageThumbRef: this.stageThumbRef,
+      appTrackRef: this.appTrackRef, appThumbRef: this.appThumbRef,
+      leadTrackRef: this.leadTrackRef, leadThumbRef: this.leadThumbRef,
+
+      buses: buses,
+      stops: this._stops(),
+      notifGroups: this._notifs(),
+      notifEmpty: s.notifEmpty,
+      notifFull: !s.notifEmpty,
+      emptyToggleLabel: s.notifEmpty ? 'Show alerts' : 'Empty state',
+
+      eta: s.eta,
+      updated: s.updated,
+      gpsWeak: gpsWeak,
+      badge: s.badge,
+      hasBadge: s.badge > 0,
+      ridersLabel: s.riders + (s.riders === 1 ? ' rider sharing' : ' riders sharing'),
+      sharingLabel: s.sharing ? 'On' : 'Off',
+      toggleBg: s.sharing ? 'var(--green)' : 'var(--fill)',
+      toggleX: s.sharing ? '20px' : '0px',
+      collabCta: s.sharing ? 'Done' : 'Not now',
+
+      appearanceNote:
+        s.theme === 'system'
+          ? 'Following your device appearance — currently ' + (dark ? 'Dark' : 'Light') + '.'
+          : s.theme === 'light'
+          ? 'Always Light, regardless of system setting.'
+          : 'Always Dark, regardless of system setting.',
+
+    };
+  }
+}
+
+</script>
+</body>
+</html>
