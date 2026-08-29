@@ -121,6 +121,43 @@ class DraggableSheetState extends State<DraggableSheet>
     if (!_initialized) _resetCollapsed();
     final c = widget.c;
     final state = widget.state;
+    final detail = state.detail;
+    final stops = detail?.stops ?? const <Stop>[];
+
+    final etaMinutes = detail?.etaMinutes;
+    final etaText = etaMinutes?.toString() ?? '—';
+
+    final Color statusBg;
+    final Color statusFg;
+    final IconData statusIcon;
+    final String statusLabel;
+    switch (detail?.status ?? BusStatusView.offline) {
+      case BusStatusView.onTime:
+        statusBg = c.greenBg;
+        statusFg = c.green;
+        statusIcon = Icons.check_rounded;
+        statusLabel = 'On time';
+        break;
+      case BusStatusView.late:
+        statusBg = c.orangeBg;
+        statusFg = c.orange;
+        statusIcon = Icons.schedule_rounded;
+        final delay = ((detail?.live?.delaySeconds ?? 0) / 60).round();
+        statusLabel = 'Delayed ${delay < 1 ? 1 : delay} min';
+        break;
+      case BusStatusView.weak:
+        statusBg = c.orangeBg;
+        statusFg = c.orange;
+        statusIcon = Icons.wifi_off_rounded;
+        statusLabel = 'Approximate';
+        break;
+      case BusStatusView.offline:
+        statusBg = c.grayBg;
+        statusFg = c.gray;
+        statusIcon = Icons.block_rounded;
+        statusLabel = 'Offline';
+        break;
+    }
 
     return Positioned(
       left: 0,
@@ -175,7 +212,9 @@ class DraggableSheetState extends State<DraggableSheet>
                                   ),
                                   const SizedBox(height: 7),
                                   Text(
-                                    'Ayarkunnam',
+                                    detail?.nextStop?.name ?? '—',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: sfText(
                                       size: 22,
                                       weight: FontWeight.w600,
@@ -192,24 +231,24 @@ class DraggableSheetState extends State<DraggableSheet>
                                       4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: c.greenBg,
+                                      color: statusBg,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Icons.check_rounded,
+                                          statusIcon,
                                           size: 12,
-                                          color: c.green,
+                                          color: statusFg,
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          'On time',
+                                          statusLabel,
                                           style: sfText(
                                             size: 11.5,
                                             weight: FontWeight.w600,
-                                            color: c.green,
+                                            color: statusFg,
                                           ),
                                         ),
                                       ],
@@ -225,7 +264,7 @@ class DraggableSheetState extends State<DraggableSheet>
                                 textBaseline: TextBaseline.alphabetic,
                                 children: [
                                   Text(
-                                    '${state.eta}',
+                                    etaText,
                                     style: sfText(
                                       size: 62,
                                       weight: FontWeight.w700,
@@ -285,7 +324,9 @@ class DraggableSheetState extends State<DraggableSheet>
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Arrives CEK 10:05',
+                            detail?.scheduledArrival == null
+                                ? ''
+                                : 'Arrives ${detail!.stops.isEmpty ? '' : detail.stops.last.name.split(' ').first} ${detail.scheduledArrival}',
                             style: sfText(
                               size: 12.5,
                               weight: FontWeight.w400,
@@ -295,11 +336,13 @@ class DraggableSheetState extends State<DraggableSheet>
                         ],
                       ),
                       const SizedBox(height: 12),
-                      for (var i = 0; i < routeStops.length; i++)
+                      for (var i = 0; i < stops.length; i++)
                         _StopTimelineRow(
-                          stop: routeStops[i],
+                          stop: stops[i],
                           isFirst: i == 0,
-                          isLast: i == routeStops.length - 1,
+                          isLast: i == stops.length - 1,
+                          nextEtaMinutes: etaMinutes,
+                          delaySeconds: detail?.live?.delaySeconds,
                           c: c,
                         ),
                       if (state.isGuest)
@@ -487,12 +530,51 @@ class _StopTimelineRow extends StatelessWidget {
   final bool isFirst;
   final bool isLast;
   final AppColors c;
+
+  /// Minutes to the next stop, from the live fix. Null when there is none.
+  final int? nextEtaMinutes;
+
+  /// Running late by this many seconds, used to caption the next stop.
+  final int? delaySeconds;
+
   const _StopTimelineRow({
     required this.stop,
     required this.isFirst,
     required this.isLast,
     required this.c,
+    this.nextEtaMinutes,
+    this.delaySeconds,
   });
+
+  /// Secondary line: what already happened, or what is scheduled.
+  String get _subtitle {
+    switch (stop.state) {
+      case StopState.past:
+        return stop.scheduledAt == null
+            ? 'Departed'
+            : 'Departed ${stop.scheduledAt}';
+      case StopState.next:
+        final delay = delaySeconds ?? 0;
+        if (delay > 120) {
+          return 'Next stop · ${(delay / 60).round()} min late';
+        }
+        return 'Next stop · on time';
+      case StopState.ahead:
+        return stop.scheduledAt == null
+            ? 'Scheduled'
+            : 'Scheduled ${stop.scheduledAt}';
+    }
+  }
+
+  /// Trailing value: a live countdown for the next stop, the timetable
+  /// otherwise. Only the next stop has a measured ETA, so presenting one for
+  /// stops further along would be invented precision.
+  String get _trailing {
+    if (stop.state == StopState.next) {
+      return nextEtaMinutes == null ? '—' : '$nextEtaMinutes min';
+    }
+    return stop.scheduledAt ?? '—';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -573,7 +655,7 @@ class _StopTimelineRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      stop.sub,
+                      _subtitle,
                       style: sfText(
                         size: 12.5,
                         weight: FontWeight.w400,
@@ -586,7 +668,7 @@ class _StopTimelineRow extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 1),
                 child: Text(
-                  stop.eta,
+                  _trailing,
                   style: next
                       ? sfText(
                           size: 17,

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/stop.dart';
 import '../state/app_state.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
@@ -29,16 +30,54 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
     final state = context.watch<AppState>();
     final c = state.isDark ? AppColors.dark : AppColors.light;
 
+    final detail = state.detail;
+
+    if (detail == null) {
+      return Container(
+        color: c.bg,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              _TopBar(state: state, c: c),
+              Center(
+                child: state.detailState == Loadable.failed
+                    ? _DetailError(
+                        message: state.detailError ?? 'Could not load this route.',
+                        canRetry: state.detailErrorRetryable,
+                        onRetry: () => state.refreshDetail(),
+                        c: c,
+                      )
+                    : CircularProgressIndicator(color: c.acc),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       color: c.bg,
       child: LayoutBuilder(
         builder: (context, constraints) {
           return Stack(
             children: [
-              Positioned.fill(child: CampusMap(key: _mapKey, dark: state.isDark)),
+              Positioned.fill(
+                child: CampusMap(
+                  key: _mapKey,
+                  dark: state.isDark,
+                  stops: detail.stops,
+                  live: detail.live,
+                  stale: detail.live?.stale ?? false,
+                ),
+              ),
               _TopBar(state: state, c: c),
-              if (state.gpsWeak) _GpsWeakBanner(state: state, c: c),
-              _RecenterButton(fraction: _sheetFraction, c: c, onTap: () => _mapKey.currentState?.recenter()),
+              if (detail.signal != BusSignal.good)
+                _GpsWeakBanner(state: state, c: c, offline: detail.signal == BusSignal.offline),
+              _RecenterButton(
+                fraction: _sheetFraction,
+                c: c,
+                onTap: () => _mapKey.currentState?.recenter(),
+              ),
               DraggableSheet(
                 totalHeight: constraints.maxHeight,
                 state: state,
@@ -81,19 +120,56 @@ class _TopBar extends StatelessWidget {
                       onTap: state.backFromBus,
                     ),
                     Expanded(
-                      child: Column(
-                        children: [
-                          Text('Route 12', style: sfText(size: 17, weight: FontWeight.w600, letterSpacing: -0.26, color: c.label)),
-                          const SizedBox(height: 2),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                      child: Builder(
+                        builder: (context) {
+                          final detail = state.detail;
+                          final offline = detail == null ||
+                              detail.signal == BusSignal.offline;
+                          return Column(
                             children: [
-                              Container(width: 6, height: 6, decoration: BoxDecoration(color: c.green, shape: BoxShape.circle)),
-                              const SizedBox(width: 5),
-                              routeLabel('Live · Kottayam ⇄ CEK', style: sfText(size: 12, weight: FontWeight.w500, color: c.lab2)),
+                              Text(
+                                detail == null ? 'Loading…' : 'Route ${detail.number}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: sfText(
+                                  size: 17,
+                                  weight: FontWeight.w600,
+                                  letterSpacing: -0.26,
+                                  color: c.label,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: offline ? c.lab3 : c.green,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Flexible(
+                                    child: routeLabel(
+                                      detail == null
+                                          ? '—'
+                                          : '${offline ? 'Offline' : 'Live'} · ${detail.name}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: sfText(
+                                        size: 12,
+                                        weight: FontWeight.w500,
+                                        color: c.lab2,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     ),
                     Stack(
@@ -149,7 +225,16 @@ class _CircleButton extends StatelessWidget {
 class _GpsWeakBanner extends StatelessWidget {
   final AppState state;
   final AppColors c;
-  const _GpsWeakBanner({required this.state, required this.c});
+
+  /// Offline means no usable fix at all, which riders cannot help with;
+  /// weak means the position is coarse and more sharers would sharpen it.
+  final bool offline;
+
+  const _GpsWeakBanner({
+    required this.state,
+    required this.c,
+    required this.offline,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -185,9 +270,19 @@ class _GpsWeakBanner extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('GPS signal weak on this bus', style: sfText(size: 13.5, weight: FontWeight.w600, color: c.label)),
+                            Text(
+                              offline
+                                  ? 'This bus is not reporting its location'
+                                  : 'GPS signal weak on this bus',
+                              style: sfText(size: 13.5, weight: FontWeight.w600, color: c.label),
+                            ),
                             const SizedBox(height: 2),
-                            Text('Riders can improve accuracy', style: sfText(size: 12, weight: FontWeight.w400, color: c.lab2)),
+                            Text(
+                              offline
+                                  ? 'Share your location to track it'
+                                  : 'Riders can improve accuracy',
+                              style: sfText(size: 12, weight: FontWeight.w400, color: c.lab2),
+                            ),
                           ],
                         ),
                       ),
@@ -247,6 +342,49 @@ class _RecenterButton extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _DetailError extends StatelessWidget {
+  final String message;
+  final bool canRetry;
+  final VoidCallback onRetry;
+  final AppColors c;
+
+  const _DetailError({
+    required this.message,
+    required this.canRetry,
+    required this.onRetry,
+    required this.c,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 40, color: c.lab3),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: sfText(size: 15, weight: FontWeight.w500, color: c.label, height: 1.4),
+          ),
+          if (canRetry) ...[
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: onRetry,
+              child: Text(
+                'Try again',
+                style: sfText(size: 15, weight: FontWeight.w600, color: c.acc),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

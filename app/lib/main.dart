@@ -1,18 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'state/app_state.dart';
-import 'theme/app_colors.dart';
+
+import 'config/env.dart';
+import 'data/api_client.dart';
+import 'data/auth_service.dart';
+import 'data/bus_repository.dart';
 import 'screens/auth_screen.dart';
 import 'screens/bus_list_screen.dart';
 import 'screens/live_status_screen.dart';
 import 'screens/settings_screen.dart';
+import 'state/app_state.dart';
+import 'theme/app_colors.dart';
+import 'theme/app_text.dart';
 import 'widgets/collab_modal.dart';
 import 'widgets/notification_panel.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final misconfiguration = Env.misconfiguration;
+  if (misconfiguration != null) {
+    runApp(_MisconfiguredApp(reason: misconfiguration));
+    return;
+  }
+
+  final api = ApiClient();
+  final state = AppState(
+    api: api,
+    auth: AuthService(api),
+    repository: BusRepository(api),
+  );
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppState(),
+    ChangeNotifierProvider.value(
+      value: state..bootstrap(),
       child: const CampusBusTrackerApp(),
     ),
   );
@@ -26,7 +47,7 @@ class CampusBusTrackerApp extends StatelessWidget {
     final state = context.watch<AppState>();
     final c = state.isDark ? AppColors.dark : AppColors.light;
     return MaterialApp(
-      title: 'Campus Bus Tracker',
+      title: 'Alumtrack',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -49,6 +70,13 @@ class _RootScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final c = state.isDark ? AppColors.dark : AppColors.light;
+
+    if (state.bootstrapping) {
+      return Scaffold(
+        backgroundColor: c.bg,
+        body: Center(child: CircularProgressIndicator(color: c.acc)),
+      );
+    }
 
     Widget screen;
     switch (state.screen) {
@@ -104,6 +132,66 @@ class _RootScaffold extends StatelessWidget {
             const CollabModal(),
             const NotificationPanel(),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown when the build is missing its backend configuration, rather than
+/// letting every request fail with an opaque network error.
+class _MisconfiguredApp extends StatelessWidget {
+  final String reason;
+  const _MisconfiguredApp({required this.reason});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: const Color(0xFFF2F2F7),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.settings_ethernet_rounded,
+                    size: 48, color: Color(0xFF8E8E93)),
+                const SizedBox(height: 16),
+                Text(
+                  'Backend not configured',
+                  textAlign: TextAlign.center,
+                  style: sfText(
+                    size: 20,
+                    weight: FontWeight.w700,
+                    color: const Color(0xFF000000),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  reason,
+                  textAlign: TextAlign.center,
+                  style: sfText(
+                    size: 14,
+                    color: const Color(0x993C3C43),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Rebuild with:\n'
+                  '--dart-define=CONVEX_SITE_URL=https://<deployment>.convex.site',
+                  textAlign: TextAlign.center,
+                  style: sfText(
+                    size: 12,
+                    color: const Color(0x663C3C43),
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

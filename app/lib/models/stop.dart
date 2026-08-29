@@ -2,42 +2,177 @@ import 'package:latlong2/latlong.dart';
 
 enum StopState { past, next, ahead }
 
-class Stop {
-  final String name;
-  final String sub;
-  final String eta;
-  final StopState state;
-  final LatLng ll;
-
-  const Stop({
-    required this.name,
-    required this.sub,
-    required this.eta,
-    required this.state,
-    required this.ll,
-  });
+StopState stopStateFromApi(String? raw) {
+  switch (raw) {
+    case 'past':
+      return StopState.past;
+    case 'next':
+      return StopState.next;
+    default:
+      return StopState.ahead;
+  }
 }
 
-/// Real coordinates: Kottayam KSRTC stand -> College of Engineering Kidangoor.
-const List<Stop> routeStops = [
-  Stop(name: 'Kottayam KSRTC', sub: 'Departed 9:22', eta: '9:22', state: StopState.past, ll: LatLng(9.5926, 76.5222)),
-  Stop(name: 'Malam', sub: 'Departed 9:31', eta: '9:31', state: StopState.past, ll: LatLng(9.6140, 76.5540)),
-  Stop(name: 'Oravakal', sub: 'Departed 9:38', eta: '9:38', state: StopState.past, ll: LatLng(9.6265, 76.5695)),
-  Stop(name: 'Ayarkunnam', sub: 'Next stop · on time', eta: '6 min', state: StopState.next, ll: LatLng(9.6390, 76.5850)),
-  Stop(name: 'Manthadi', sub: 'Scheduled 9:54', eta: '13 min', state: StopState.ahead, ll: LatLng(9.6480, 76.6015)),
-  Stop(name: 'Kidangoor Junction', sub: 'Scheduled 10:00', eta: '19 min', state: StopState.ahead, ll: LatLng(9.6600, 76.6175)),
-  Stop(name: 'College of Engineering Kidangoor', sub: 'Final stop · 10:05', eta: '24 min', state: StopState.ahead, ll: LatLng(9.6655, 76.6285)),
-];
+class Stop {
+  final int seq;
+  final String name;
+  final LatLng ll;
+  final StopState state;
 
-/// Bus progress (0..1) along the route, used to place the map marker —
-/// matches the prototype's fixed `progress="0.42"` preview value.
-const double busRouteProgress = 0.42;
+  /// Scheduled clock time at this stop, "HH:mm", when the route has a timetable.
+  final String? scheduledAt;
 
-LatLng pointAtProgress(double progress) {
-  final t = progress.clamp(0.0, 1.0) * (routeStops.length - 1);
-  final i = t.floor().clamp(0, routeStops.length - 2);
-  final f = t - i;
-  final a = routeStops[i].ll;
-  final b = routeStops[i + 1].ll;
-  return LatLng(a.latitude + (b.latitude - a.latitude) * f, a.longitude + (b.longitude - a.longitude) * f);
+  const Stop({
+    required this.seq,
+    required this.name,
+    required this.ll,
+    required this.state,
+    this.scheduledAt,
+  });
+
+  factory Stop.fromJson(Map<String, dynamic> json) => Stop(
+        seq: (json['seq'] as num).toInt(),
+        name: json['name'] as String,
+        ll: LatLng(
+          (json['lat'] as num).toDouble(),
+          (json['lng'] as num).toDouble(),
+        ),
+        state: stopStateFromApi(json['state'] as String?),
+        scheduledAt: json['scheduledAt'] as String?,
+      );
+}
+
+/// The bus's current position and progress along its route.
+class LivePosition {
+  final LatLng ll;
+
+  /// 0..1 along the route polyline.
+  final double progress;
+  final double? speedKph;
+  final double? headingDeg;
+  final int? etaSeconds;
+  final int? delaySeconds;
+  final DateTime updatedAt;
+
+  /// True when the last fix is old enough that the position should not be
+  /// presented as current.
+  final bool stale;
+
+  /// "device" (onboard tracker) or "rider" (a phone sharing location).
+  final String source;
+
+  const LivePosition({
+    required this.ll,
+    required this.progress,
+    required this.updatedAt,
+    required this.stale,
+    required this.source,
+    this.speedKph,
+    this.headingDeg,
+    this.etaSeconds,
+    this.delaySeconds,
+  });
+
+  factory LivePosition.fromJson(Map<String, dynamic> json) => LivePosition(
+        ll: LatLng(
+          (json['lat'] as num).toDouble(),
+          (json['lng'] as num).toDouble(),
+        ),
+        progress: (json['progress'] as num).toDouble(),
+        speedKph: (json['speedKph'] as num?)?.toDouble(),
+        headingDeg: (json['headingDeg'] as num?)?.toDouble(),
+        etaSeconds: (json['etaSeconds'] as num?)?.round(),
+        delaySeconds: (json['delaySeconds'] as num?)?.round(),
+        updatedAt:
+            DateTime.fromMillisecondsSinceEpoch((json['updatedAt'] as num).toInt()),
+        stale: json['stale'] == true,
+        source: json['source'] as String? ?? 'device',
+      );
+}
+
+/// Everything the live-status screen renders for one route.
+class RouteDetail {
+  final String id;
+  final String number;
+  final String name;
+  final BusSignal signal;
+  final BusStatusView status;
+  final int riders;
+  final bool sharing;
+  final List<Stop> stops;
+  final LivePosition? live;
+  final String? scheduledArrival;
+
+  const RouteDetail({
+    required this.id,
+    required this.number,
+    required this.name,
+    required this.signal,
+    required this.status,
+    required this.riders,
+    required this.sharing,
+    required this.stops,
+    required this.live,
+    this.scheduledArrival,
+  });
+
+  factory RouteDetail.fromJson(Map<String, dynamic> json) => RouteDetail(
+        id: json['id'] as String,
+        number: json['number'] as String,
+        name: json['name'] as String,
+        signal: _signalFrom(json['signal'] as String?),
+        status: _statusFrom(json['status'] as String?),
+        riders: (json['riders'] as num?)?.toInt() ?? 0,
+        sharing: json['sharing'] == true,
+        scheduledArrival: json['scheduledArrival'] as String?,
+        stops: ((json['stops'] as List?) ?? const [])
+            .map((e) => Stop.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        live: json['live'] == null
+            ? null
+            : LivePosition.fromJson(json['live'] as Map<String, dynamic>),
+      );
+
+  Stop? get nextStop {
+    for (final s in stops) {
+      if (s.state == StopState.next) return s;
+    }
+    return null;
+  }
+
+  /// Minutes to the next stop, or null when there is no live fix.
+  int? get etaMinutes {
+    final seconds = live?.etaSeconds;
+    if (seconds == null) return null;
+    final m = (seconds / 60).ceil();
+    return m < 1 ? 1 : m;
+  }
+}
+
+enum BusSignal { good, weak, offline }
+
+BusSignal _signalFrom(String? raw) {
+  switch (raw) {
+    case 'good':
+      return BusSignal.good;
+    case 'weak':
+      return BusSignal.weak;
+    default:
+      return BusSignal.offline;
+  }
+}
+
+enum BusStatusView { onTime, late, weak, offline }
+
+BusStatusView _statusFrom(String? raw) {
+  switch (raw) {
+    case 'onTime':
+      return BusStatusView.onTime;
+    case 'late':
+      return BusStatusView.late;
+    case 'weak':
+      return BusStatusView.weak;
+    default:
+      return BusStatusView.offline;
+  }
 }

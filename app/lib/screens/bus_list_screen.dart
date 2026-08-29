@@ -32,7 +32,7 @@ class _BusListScreenState extends State<BusListScreen> {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final c = state.isDark ? AppColors.dark : AppColors.light;
-    final buses = mockBuses.where((b) => b.matches(state.query)).toList();
+    final buses = state.visibleBuses;
 
     return Container(
       color: c.bg,
@@ -55,7 +55,9 @@ class _BusListScreenState extends State<BusListScreen> {
                           Text('Buses', style: sfText(size: 34, weight: FontWeight.w700, letterSpacing: -0.95, color: c.label)),
                           const SizedBox(height: 5),
                           Text(
-                            'Updated ${state.updated} · 6 routes',
+                            'Updated ${state.updated} · '
+                            '${state.buses.length} '
+                            '${state.buses.length == 1 ? 'route' : 'routes'}',
                             style: sfText(size: 13, weight: FontWeight.w400, color: c.lab2),
                           ),
                         ],
@@ -117,23 +119,39 @@ class _BusListScreenState extends State<BusListScreen> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: c.bgEl,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: c.shadow,
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < buses.length; i++)
-                        _BusRow(bus: buses[i], showSeparator: i != buses.length - 1, onTap: state.goBus),
-                    ],
+              if (state.listState == Loadable.loading && buses.isEmpty)
+                _ListPlaceholder(c: c)
+              else if (state.listState == Loadable.failed && buses.isEmpty)
+                _ListError(
+                  message: state.listError ?? 'Could not load routes.',
+                  canRetry: state.listErrorRetryable,
+                  onRetry: () => state.refreshList(),
+                  c: c,
+                )
+              else if (buses.isEmpty)
+                _ListEmpty(hasQuery: state.query.trim().isNotEmpty, c: c)
+              else
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: c.bgEl,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: c.shadow,
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < buses.length; i++)
+                          _BusRow(
+                            bus: buses[i],
+                            showSeparator: i != buses.length - 1,
+                            onTap: () => state.openBus(buses[i].id),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
                 child: Text(
@@ -144,6 +162,128 @@ class _BusListScreenState extends State<BusListScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Skeleton rows while the first load is in flight.
+class _ListPlaceholder extends StatelessWidget {
+  final AppColors c;
+  const _ListPlaceholder({required this.c});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.bgEl,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: c.shadow,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: List.generate(
+            5,
+            (i) => Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: c.fill,
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(height: 14, width: 180, color: c.fill),
+                        const SizedBox(height: 8),
+                        Container(height: 12, width: 90, color: c.fill),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ListError extends StatelessWidget {
+  final String message;
+  final bool canRetry;
+  final VoidCallback onRetry;
+  final AppColors c;
+
+  const _ListError({
+    required this.message,
+    required this.canRetry,
+    required this.onRetry,
+    required this.c,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 48, 32, 0),
+      child: Column(
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 40, color: c.lab3),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: sfText(size: 15, weight: FontWeight.w500, color: c.label, height: 1.4),
+          ),
+          if (canRetry) ...[
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: onRetry,
+              child: Text(
+                'Try again',
+                style: sfText(size: 15, weight: FontWeight.w600, color: c.acc),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ListEmpty extends StatelessWidget {
+  final bool hasQuery;
+  final AppColors c;
+  const _ListEmpty({required this.hasQuery, required this.c});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 48, 32, 0),
+      child: Column(
+        children: [
+          Icon(
+            hasQuery ? Icons.search_off_rounded : Icons.directions_bus_outlined,
+            size: 40,
+            color: c.lab3,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            hasQuery ? 'No routes match that search.' : 'No routes are running yet.',
+            textAlign: TextAlign.center,
+            style: sfText(size: 15, weight: FontWeight.w500, color: c.label, height: 1.4),
+          ),
+        ],
       ),
     );
   }

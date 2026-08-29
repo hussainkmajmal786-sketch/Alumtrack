@@ -19,7 +19,9 @@ class NotificationPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final c = state.isDark ? AppColors.dark : AppColors.light;
-    final isEmpty = mockNotifications.every((g) => g.items.isEmpty);
+    final feed = state.alerts;
+    final groups = feed?.groups ?? const <NotificationGroup>[];
+    final isEmpty = groups.isEmpty;
 
     return IgnorePointer(
       ignoring: !state.notifOpen,
@@ -50,7 +52,12 @@ class NotificationPanel extends StatelessWidget {
                 bottom: 0,
                 right: -offset,
                 width: _kPanelWidth,
-                child: _PanelBody(state: state, c: c, isEmpty: isEmpty),
+                child: _PanelBody(
+                  state: state,
+                  c: c,
+                  isEmpty: isEmpty,
+                  groups: groups,
+                ),
               ),
             ],
           );
@@ -64,10 +71,12 @@ class _PanelBody extends StatelessWidget {
   final AppState state;
   final AppColors c;
   final bool isEmpty;
+  final List<NotificationGroup> groups;
   const _PanelBody({
     required this.state,
     required this.c,
     required this.isEmpty,
+    required this.groups,
   });
 
   @override
@@ -131,7 +140,7 @@ class _PanelBody extends StatelessWidget {
                     : ListView(
                         padding: const EdgeInsets.fromLTRB(14, 0, 14, 40),
                         children: [
-                          for (final group in mockNotifications)
+                          for (final group in groups)
                             _NotifGroup(group: group, c: c),
                         ],
                       ),
@@ -168,7 +177,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            'New alerts for Route 12 show up here.',
+            'New alerts about your bus show up here.',
             textAlign: TextAlign.center,
             style: sfText(
               size: 14,
@@ -300,7 +309,9 @@ class _NotifRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${item.route} · ${item.time}',
+                      item.route == null
+                          ? item.time
+                          : '${item.route} · ${item.time}',
                       style: sfText(
                         size: 12,
                         weight: FontWeight.w400,
