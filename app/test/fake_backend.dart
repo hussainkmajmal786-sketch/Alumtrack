@@ -160,19 +160,27 @@ class FakeBackend {
             : null,
       };
 
+  /// [hour]/[minute] are pinned to a fixed time *today* so the rendered
+  /// timestamp and the "Today" grouping stay identical between runs —
+  /// otherwise every golden capture would differ by a minute.
   static Map<String, dynamic> alert({
     String id = 'a1',
     String kind = 'arriving',
     String message = 'Your bus is 5 minutes away',
     String? routeNumber = '12',
     bool unread = true,
-  }) =>
-      {
-        'id': id,
-        'kind': kind,
-        'message': message,
-        'routeNumber': routeNumber,
-        'createdAt': _now,
-        'unread': unread,
-      };
+    int hour = 9,
+    int minute = 33,
+  }) {
+    final now = DateTime.now();
+    final at = DateTime(now.year, now.month, now.day, hour, minute);
+    return {
+      'id': id,
+      'kind': kind,
+      'message': message,
+      'routeNumber': routeNumber,
+      'createdAt': at.millisecondsSinceEpoch,
+      'unread': unread,
+    };
+  }
 }

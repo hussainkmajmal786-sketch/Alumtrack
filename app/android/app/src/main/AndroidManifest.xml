@@ -1,6 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Reaching the Convex backend and OpenStreetMap tiles. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- Rider-assisted tracking. Foreground only: the app stops sharing when
+         backgrounded, so ACCESS_BACKGROUND_LOCATION is deliberately absent. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- GPS is optional: without it the app still shows buses tracked by the
+         onboard units, so don't exclude devices that lack one. -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+
     <application
-        android:label="campus_bus_tracker"
+        android:label="Alumtrack"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

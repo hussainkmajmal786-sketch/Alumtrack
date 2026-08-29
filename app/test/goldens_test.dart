@@ -176,6 +176,8 @@ void main() {
           id: 'a2',
           kind: 'delay',
           message: 'Route 12 delayed 7 min near Ayarkunnam',
+          hour: 8,
+          minute: 58,
         ),
         FakeBackend.alert(
           id: 'a3',
@@ -183,6 +185,8 @@ void main() {
           message: 'GPS signal restored on Route 27',
           routeNumber: '27',
           unread: false,
+          hour: 8,
+          minute: 41,
         ),
       ],
     );

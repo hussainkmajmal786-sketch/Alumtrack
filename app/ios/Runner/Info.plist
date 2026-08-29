@@ -7,13 +7,17 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Campus Bus Tracker</string>
+	<string>Alumtrack</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<!-- Rider-assisted tracking. Foreground only, so the "Always" variant is
+	     deliberately not requested. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Alumtrack shares your location with your campus bus only while you are tracking it, so arrival times stay accurate for everyone on board.</string>
 	<key>CFBundleName</key>
 	<string>campus_bus_tracker</string>
 	<key>CFBundlePackageType</key>

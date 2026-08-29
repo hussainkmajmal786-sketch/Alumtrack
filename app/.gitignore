@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Per-environment dart-define files; only env/example.json is committed.
+/env/*.json
+!/env/example.json
