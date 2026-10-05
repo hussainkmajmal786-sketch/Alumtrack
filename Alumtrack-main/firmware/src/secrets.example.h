@@ -22,6 +22,5 @@
 #define WIFI_PASSWORD_FALLBACK ""
 
 // --- Backend --------------------------------------------------------------
-// Convex HTTP Actions origin. Note this is the `.convex.site` host, NOT the
-// `.convex.cloud` one used by the Convex client SDKs.
-#define INGEST_URL "https://your-deployment.convex.site/api/ingest"
+// Cloudflare Worker origin (the workers.dev host or your custom domain).
+#define INGEST_URL "https://alumtrack.<your-subdomain>.workers.dev/api/ingest"

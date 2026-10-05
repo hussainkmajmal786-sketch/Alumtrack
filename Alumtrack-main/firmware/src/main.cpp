@@ -133,22 +133,45 @@ void updateLed(bool wifiUp, bool haveFix) {
   setLed((millis() % period) < (period / 2));
 }
 
+/** Logs why the AP dropped or refused us (wrong password, no such SSID, ...). */
+void onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
+  if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
+    Serial.printf("[wifi] disconnected, reason %u (2/15/202=bad password, "
+                  "201=SSID not found, 200=beacon timeout)\n",
+                  (unsigned)info.wifi_sta_disconnected.reason);
+  } else if (event == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
+    Serial.printf("[wifi] connected, ip %s rssi %d\n",
+                  WiFi.localIP().toString().c_str(), WiFi.RSSI());
+  }
+}
+
 bool startWifi(bool useFallback) {
   const char *ssid = useFallback ? WIFI_SSID_FALLBACK : WIFI_SSID;
   const char *password = useFallback ? WIFI_PASSWORD_FALLBACK : WIFI_PASSWORD;
   if (strlen(ssid) == 0) return false;
 
   Serial.printf("[wifi] connecting to %s\n", ssid);
-  WiFi.disconnect(true);
+  // Keep the radio on and don't erase stored config: disconnect(true) powers
+  // the radio down, and bouncing it straight into WIFI_STA is a known source
+  // of connections that never come up on Arduino-ESP32.
+  WiFi.disconnect(false, false);
   WiFi.mode(WIFI_STA);
   // A tracker that sleeps its radio adds latency to every post for no real
   // saving on a bus that is already powering the unit.
   WiFi.setSleep(false);
   WiFi.begin(ssid, password);
+  lastWifiAttemptAt = millis();
   return true;
 }
 
-/** Non-blocking Wi-Fi supervision with exponential backoff. */
+/**
+ * Non-blocking Wi-Fi supervision with exponential backoff.
+ *
+ * An attempt is given WIFI_CONNECT_TIMEOUT_MS to finish (scan + WPA2
+ * handshake + DHCP routinely takes 5-10 s) before it is abandoned; the
+ * backoff only starts counting after that. Restarting sooner aborts every
+ * attempt before it can complete, so the tracker never connects.
+ */
 void serviceWifi() {
   if (WiFi.status() == WL_CONNECTED) {
     wifiRetryDelay = WIFI_RETRY_MIN_MS;
@@ -162,8 +185,7 @@ void serviceWifi() {
   }
 
   const uint32_t now = millis();
-  if (now - lastWifiAttemptAt < wifiRetryDelay) return;
-  lastWifiAttemptAt = now;
+  if (now - lastWifiAttemptAt < WIFI_CONNECT_TIMEOUT_MS + wifiRetryDelay) return;
 
   // Alternate between the primary and fallback networks so a bus parked
   // outside the primary's range still finds a way home.
@@ -332,6 +354,8 @@ void setup() {
 #endif
   esp_task_wdt_add(nullptr);
 
+  WiFi.persistent(false);
+  WiFi.onEvent(onWifiEvent);
   startWifi(false);
 }
 
