@@ -8,3 +8,9 @@ Alumtrack-main/worker/.wrangler/
 Alumtrack-main/migration/import*.sql
 Alumtrack-main/migration/counts.txt
 Alumtrack-main/migration/stmt-*.sql
+
+# Convex database snapshot. Kept out of version control deliberately: it
+# contains password hashes, session tokens and student emails, and this
+# repository is public. The file lives on local disk and on Convex's own
+# snapshot storage; to-d1.py regenerates the import SQL from it.
+Alumtrack-main/migration/*.zip
