@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["@cloudflare/workers-types"],
+    "strict": true,
+    // Deliberately off. lib/auth.ts and lib/geo.ts are verbatim ports of the
+    // Convex originals, and their loops index arrays in ways this flag
+    // cannot prove safe without rewriting maths that is already correct and
+    // field-proven. Turning it on would mean either editing those files
+    // (losing the "verbatim" guarantee that makes the port auditable) or
+    // scattering non-null assertions through them, which is worse than not
+    // having the check.
+    "noUncheckedIndexedAccess": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*.ts"]
+}

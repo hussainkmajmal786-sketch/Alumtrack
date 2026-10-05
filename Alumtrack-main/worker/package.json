@@ -1,0 +1,21 @@
+{
+  "name": "alumtrack-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Workers backend for Alumtrack — live campus bus tracking",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "db:schema": "wrangler d1 execute alumtrack --remote --file=./schema.sql",
+    "db:schema:local": "wrangler d1 execute alumtrack --local --file=./schema.sql"
+  },
+  "dependencies": {
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.6.3",
+    "wrangler": "^3.95.0"
+  }
+}

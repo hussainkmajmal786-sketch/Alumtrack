@@ -1,0 +1,34 @@
+name = "alumtrack"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+
+# Pinned because this login can see more than one account, and without it
+# every wrangler command fails in non-interactive use.
+account_id = "7a852bedf2056637d90bd9534e6cd7c1"
+
+# nodejs_compat is deliberately absent. Everything here runs on Web Crypto
+# and fetch, exactly as it did on Convex's V8 runtime, so pulling in the
+# Node shims would add weight for nothing.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "alumtrack"
+database_id = "09e8cfe2-fee0-4ecd-814d-0c579d8a6551"
+
+# Scheduled jobs, ported from convex/crons.ts. Workers cron has one-minute
+# granularity, so the two sub-minute intervals keep the longer cadence they
+# were already tuned to after the quota overage:
+#   */2 — route alerts: time-sensitive (drives "bus passed X" notifications)
+#   */10 — rider-share sweep: rows only; readers already filter by staleness
+#   0 */6 — position pruning: keeps the time series bounded
+[triggers]
+crons = ["*/2 * * * *", "*/10 * * * *", "0 */6 * * *"]
+
+[vars]
+# Local timezone offset used for schedule/delay comparisons (IST = 330).
+SCHEDULE_TZ_OFFSET_MINUTES = "330"
+
+# Secrets are set with `wrangler secret put <NAME>`, never committed:
+#   ADMIN_KEY          — static key for firmware provisioning scripts
+#   GOOGLE_CLIENT_IDS  — comma-separated OAuth client ids
+#   ALLOWED_ORIGIN     — CORS origin for the Flutter web build
