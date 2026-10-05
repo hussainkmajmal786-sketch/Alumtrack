@@ -1,0 +1,5 @@
+{
+  "API_BASE_URL": "https://your-worker.workers.dev",
+  "GOOGLE_SERVER_CLIENT_ID": "000000000000-xxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+  "GOOGLE_WEB_CLIENT_ID": "000000000000-yyyyyyyyyyyyyyyy.apps.googleusercontent.com"
+}
